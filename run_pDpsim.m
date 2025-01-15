@@ -34,14 +34,14 @@ if twoorthree==1
     PIN=0;
 else
     pagexls=2;
-    load('odorset_20odors.mat');num_odors=20;
+    load('odorset_20odors.mat');num_odors=20;ods=1;
     PIN=input('inhibiting I neurons (vPIN): no (0), FFI (1) or FBI (7)');
     if randortuned==1
         ext='_r';
     elseif randortuned==2
         ext='_r';
         ext1='_s';
-        fact=disp('scaling factor I to E strength?');
+        fact=input('scaling factor I to E strength?');
     elseif randortuned==4
         ext='_s';
     elseif randortuned==3
@@ -50,7 +50,7 @@ else
 end
 
 [param,connec,tot]=xlsread('parameters.xlsx',pagexls);
-if twoorthree==2 && randortuned==1
+if twoorthree==2 && randortuned<3
     tot_mat=10;
 else
     tot_mat=length(param);
@@ -59,7 +59,8 @@ end
 r_ob=int8(r_olfbs);clear r_olfbs
 
 for mat=1:tot_mat %can be changed if simulation of only subsets of networks    
-   
+    dt=0.1;
+    
     Ninh=1000;
     if twoorthree==2
         Istim=ones(length(r_ob),Ninh);
@@ -77,7 +78,13 @@ for mat=1:tot_mat %can be changed if simulation of only subsets of networks
     struct=1;
     
     if randortuned==2
-        load(strcat(connec{mat},ext1)),load(strcat(connec{mat},ext),'w_ie');
+        load(strcat(connec{mat},ext1))
+        if twoorthree==1
+            load(strcat(connec{mat},ext),'w_ie');
+        else
+            conn=connec{mat};
+            load(strcat(conn(1:9),num2str(1),ext),'w_ie');
+        end
         w_ie=fact*w_ie;
     else
         load(strcat(connec{mat},ext))
@@ -89,7 +96,6 @@ for mat=1:tot_mat %can be changed if simulation of only subsets of networks
 
     y=param(mat,:);
     
-    dt=0.1;
     
     %neuronal parameters
     tau_exc=30;
@@ -253,11 +259,17 @@ for mat=1:tot_mat %can be changed if simulation of only subsets of networks
     ACT_I{tit}=spikecount_I;
     
     if analys==1
-        observables
-        co_tuning
+        [obs loss] = observables(num_odors,Nexc,Ninh,dt,spikecount_E,spikecount_I,g_oed,g_ed,g_ied);
+        obs_mat(mat,:)=obs
+        loss_mat(mat,:)=loss;
+        [res_cot] = cotuning(num_odors,Nexc,dt,g_oed,g_ed,g_ied,EnsE);
+        cot_mat(mat,:)=res_cot;
     end
+    
+    %figure,plot(spikecount_E(:,1),spikecount_E(:,2),'.k')
+    
     tit=tit+1
-    clearvars -except mat twoorthree tit randortuned analys pagexls ext ext1 fact ods num_odors r_ob tot_mat PIN ACT ACT_I param connec tot
+    clearvars -except mat twoorthree tit randortuned analys pagexls ext ext1 fact ods num_odors r_ob tot_mat dt PIN ACT ACT_I param connec tot obs_mat cot_mat loss_mat 
     %save()
 end
 
