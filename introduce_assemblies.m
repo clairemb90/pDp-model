@@ -7,7 +7,7 @@ tit=0;
 
 for matlist=1:20
     
-    num_pat=15; % number of memories, can be changed
+    num_pat=15; % number of assemblies (memories), can be changed
     num_exc=100; % E assembly size, can be changed
     num_inh=25; % I assembly size, can be changed
     
